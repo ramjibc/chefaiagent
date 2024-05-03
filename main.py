@@ -93,6 +93,10 @@ def execute():
     You are equipped with an internet search tool and a special vectorstore of information about dishes as well as ingredients and recipes to cook those dishes.
     If the query covers the topics of dishes and recipes, use the vectorstore search. 
     For food allergy and dietary information, use the internet search.
+    If you find a suitable recipe, return ONLY the ingredients as output. INCLUDE ingredient name and quantity.
+    Output should be table with the following format. 
+    | Ingredient | Quantity | 
+    | ---------- | -------- |
     """
     vectorized_recipes = embed_recipes(load_recipes())
     retriever_tool = create_retriver_tool(vectorized_docs=vectorized_recipes)
