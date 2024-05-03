@@ -14,6 +14,7 @@ from langchain_cohere.chat_models import ChatCohere
 
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_community.tools.tavily_search import TavilySearchResults
+from mock_tools import check_item_in_fridge
 
 COHERE_API_KEY = os.getenv("COHERE_API_KEY")
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
@@ -78,13 +79,29 @@ def create_chef_agent(vectorstore_search, internet_search):
     # Create the ReAct agent
     agent = create_cohere_react_agent(
         llm=chat,
-        tools=[internet_search, vectorstore_search],
+        tools=[internet_search, vectorstore_search, check_item_in_fridge],
         prompt=prompt,
     )
     return agent
 
 
-def execute():
+def create_shopping_agent():
+    """Create a shopping agent that takes the ingredients list from the chef agent and buys the missing items"""
+    chat = ChatCohere(model="command-r-plus", temperature=0.3)
+
+    # Prompt
+    prompt = ChatPromptTemplate.from_template("{input}")
+
+    # Create the ReAct agent
+    agent = create_cohere_react_agent(
+        llm=chat,
+        tools=[check_item_in_fridge],
+        prompt=prompt,
+    )
+    return agent
+
+
+def execute_chef_agent():
     """Create and execute the chef agent"""
 
     # Preamble
@@ -93,10 +110,11 @@ def execute():
     You are equipped with an internet search tool and a special vectorstore of information about dishes as well as ingredients and recipes to cook those dishes.
     If the query covers the topics of dishes and recipes, use the vectorstore search. 
     For food allergy and dietary information, use the internet search.
-    If you find a suitable recipe, return ONLY the ingredients as output. INCLUDE ingredient name and quantity.
+    If you find a suitable recipe, use the check_item_in_fridge tool to check if the ingredient is available.
+    Return ONLY the ingredients as output. INCLUDE ingredient name, quantity and availability.
     Output should be table with the following format. 
-    | Ingredient | Quantity | 
-    | ---------- | -------- |
+    | Ingredient | Quantity | Available |
+    | ---------- | -------- | --------- |
     """
     vectorized_recipes = embed_recipes(load_recipes())
     retriever_tool = create_retriver_tool(vectorized_docs=vectorized_recipes)
@@ -106,7 +124,7 @@ def execute():
     )
 
     agent_executor = AgentExecutor(
-        agent=agent, tools=[internet_tool, retriever_tool], verbose=True
+        agent=agent, tools=[internet_tool, retriever_tool, check_item_in_fridge], verbose=True
     )
 
     agent_executor.invoke(
@@ -119,4 +137,4 @@ def execute():
 
 
 if __name__ == "__main__":
-    execute()
+    execute_chef_agent()
