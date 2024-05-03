@@ -110,7 +110,7 @@ def execute_chef_agent():
     You are equipped with an internet search tool and a special vectorstore of information about dishes as well as ingredients and recipes to cook those dishes.
     If the query covers the topics of dishes and recipes, use the vectorstore search. 
     For food allergy and dietary information, use the internet search.
-    If you find a suitable recipe, use the check_item_in_fridge tool to check if the ingredient is available.
+    If you find a suitable recipe, use the check_item_in_fridge tool ONLY ONCE per ingredient to check availability.
     Return ONLY the ingredients as output. INCLUDE ingredient name, quantity and availability.
     Output should be table with the following format. 
     | Ingredient | Quantity | Available |
